@@ -1,0 +1,30 @@
+opencode-dsh-godmode — NOTICE
+=============================
+
+This plugin reproduces two short system-prompt texts from the DeepSeek Harness
+project. Both upstream sources are MIT-licensed; their copyright and license
+terms are acknowledged below. These base persona texts are used verbatim before
+the plugin's own short thinking hint is appended.
+
+1. Pro prompt
+   Text:    "You are a helpful software engineer assistant."
+   Source:  dsh-anchored-standard — preset/agent.cordis.yml
+            (the `persona` row, `complete: true`)
+   License: MIT
+   Copyright (c) 2026 xiaobright
+   Portions Copyright (c) 2026 DeepSeek
+
+2. Flash prompt (WEAK_FLASH)
+   Text:    "You are a helpful assistant.\nBefore acting, decide the task type
+            (build or fix) and adopt the matching style: build → hands-on
+            production; fix → inspect-and-plan.\nBefore acting, briefly review
+            what you have already done in this session and continue from where
+            you left off; do not repeat completed steps. Do not run environment
+            checks (echo, whoami, uname, node --version, date) or exhaustive
+            grep/glob scans."
+   Source:  dsh-router-standard — preset/router-core.mjs
+            (the `WEAK_FLASH` constant)
+   License: MIT
+   Copyright (c) 2026 yjh051108
+
+This plugin's own code is licensed under the MIT License in ./LICENSE.

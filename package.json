@@ -1,0 +1,44 @@
+{
+  "name": "opencode-dsh-godmode",
+  "version": "0.1.0",
+  "description": "OpenCode V2 plugin that anchors DeepSeek V4 Pro/Flash with static DSH prompts and model-specific tool routing.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --test test/index.test.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DDwsgood/opencode-dsh-godmode.git"
+  },
+  "homepage": "https://github.com/DDwsgood/opencode-dsh-godmode#readme",
+  "bugs": {
+    "url": "https://github.com/DDwsgood/opencode-dsh-godmode/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "deepseek",
+    "deepseek-harness",
+    "deepseek-v4-pro",
+    "deepseek-v4-flash"
+  ],
+  "license": "MIT"
+}
