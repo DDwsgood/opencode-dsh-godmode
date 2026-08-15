@@ -30,7 +30,8 @@
     "url": "https://github.com/DDwsgood/opencode-dsh-godmode/issues"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "opencode",
