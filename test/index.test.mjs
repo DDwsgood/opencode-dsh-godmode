@@ -88,7 +88,7 @@ test("guidance text matches router-standard", () => {
 test("third-request reminder preserves tool and skill discovery", () => {
   assert.equal(
     THIRD_REQUEST_REMINDER,
-    "<system_reminder>Tools: execute -> search({}) -> tools. Skills: cwd/.agents/skills, $HOME/.agents/skills. Image: vision CLI (vision --help).</system_reminder>",
+    "<system_reminder>Tools: execute -> search({}) -> tools. Skills: cwd/.agents/skills, $HOME/.agents/skills.</system_reminder>",
   )
 })
 

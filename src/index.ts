@@ -52,7 +52,7 @@ export const GUIDE_DEEP =
 export const TURN_GUIDANCE =
   'Router: classify this task (build or fix), then adopt the matching style — build: direct production; fix: inspect first. Think deeply about architecture, edge cases, and integration points, then commit and act. Start the next reasoning block with the exact words "We need". Additional tools, including MCP tools, are discoverable only when needed through execute; inside its code call search({ query: "..." }) before using an undisclosed tool.'
 export const THIRD_REQUEST_REMINDER =
-  "<system_reminder>Tools: execute -> search({}) -> tools. Skills: cwd/.agents/skills, $HOME/.agents/skills. Image: vision CLI (vision --help).</system_reminder>"
+  "<system_reminder>Tools: execute -> search({}) -> tools. Skills: cwd/.agents/skills, $HOME/.agents/skills.</system_reminder>"
 const PUBLISHED_THIRD_REQUEST_REMINDER =
   "<system_reminder>Tools: execute.search. Skills: cwd/.opencode/skills, ~/.config/opencode/skills.</system_reminder>"
 
