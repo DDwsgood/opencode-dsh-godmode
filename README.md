@@ -59,7 +59,7 @@ Add the npm package to the `plugins` array in your `opencode.json` or global Ope
 ```jsonc
 {
   "plugins": [
-    "opencode-dsh-godmode@0.1.2"
+    "opencode-dsh-godmode@0.1.3"
   ]
 }
 ```
