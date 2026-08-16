@@ -1,6 +1,6 @@
 {
   "name": "opencode-dsh-godmode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenCode V2 plugin that anchors DeepSeek V4 Pro/Flash with static DSH prompts and model-specific tool routing.",
   "type": "module",
   "sideEffects": false,

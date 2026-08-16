@@ -6,7 +6,7 @@ An [OpenCode V2](https://opencode.ai/v2/docs) server plugin that anchors **DeepS
 
 The plugin registers the `ctx.session.hook("context", ...)` hook, which OpenCode V2 fires once per main-loop model step (title generation and compaction do **not** trigger it). For an event whose **model id or provider string exactly contains** `deepseek-v4-pro` or `deepseek-v4-flash`, it **completely replaces `event.system`** with a single system part holding the model's prompt.
 
-The first model request exposes only OpenCode's `shell` tool. After promotion, Flash receives the complete host API tool record, while Pro follows anchored-standard and remains on the stable `shell`/`edit`/`read`/`glob`/`execute` resident set; other basic operations remain available through `shell`. `execute` retains on-demand discovery through `search`, including all connected MCP tools, without placing their full schemas in the Pro request. The system remains one small, static persona plus the verified hint `When you thought, thought in ENGLISH and starts with 'we need'`; no dynamic environment, instructions, Code Mode catalog, or near-field system message is appended. Following routing-suite P14/P15, one fixed user-role guide is durably admitted once per real user turn. It is mirrored only into that turn's first request while the durable synthetic message awaits promotion, then reused from session history on later model steps. Neither prompt bans `Let me`.
+The first model request exposes only OpenCode's `shell` tool. After promotion, Flash receives the complete host API tool record, while Pro follows anchored-standard and remains on the stable `shell`/`edit`/`read`/`glob`/`execute` resident set; other basic operations remain available through `shell`. `execute` retains on-demand discovery through `search`, including all connected MCP tools, without placing their full schemas in the Pro request. The system remains one small, static persona plus the verified hint `When you thought, thought in ENGLISH and starts with 'we need'`; no dynamic environment, instructions, or Code Mode catalog is restored. Following routing-suite P14/P15, one fixed user-role guide is durably admitted once per real user turn. It is mirrored only into that turn's first request while the durable synthetic message awaits promotion, then reused from session history on later model steps. Pro receives the durable tool-and-skill discovery reminder `<system_reminder>Tools: execute.search. Skills: cwd/.opencode/skills, ~/.config/opencode/skills.</system_reminder>` only on the session's third model request; Flash never receives it. Its trigger is derived from durable assistant history, so user prompts and plugin restarts cannot reset it. Neither prompt bans `Let me`.
 
 ### Prompt bases
 
@@ -53,7 +53,7 @@ Add the npm package to the `plugins` array in your `opencode.json` or global Ope
 ```jsonc
 {
   "plugins": [
-    "opencode-dsh-godmode@0.1.0"
+    "opencode-dsh-godmode@0.1.1"
   ]
 }
 ```
@@ -75,7 +75,7 @@ cd opencode-dsh-godmode
 npm test            # node --test test/index.test.mjs
 ```
 
-The unit tests use only Node's built-in test runner and assert module. They verify exact prompt composition, first-request shell bootstrap, Pro's resident tool set, Flash's post-bootstrap full catalog, static system replacement, near-field guidance, model matching, and non-target isolation.
+The unit tests use only Node's built-in test runner and assert module. They verify exact prompt composition, first-request shell bootstrap, Pro's resident tool set, Flash's post-bootstrap full catalog, static system replacement, durable guidance and third-request reminder admission, model matching, and non-target isolation.
 
 ## License & sources
 

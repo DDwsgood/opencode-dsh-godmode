@@ -55,6 +55,8 @@ export const PRO_RESIDENT_TOOLS = new Set(["shell", "edit", "read", "glob", "exe
 export const THINKING_HINT = "When you thought, thought in ENGLISH and starts with 'we need'"
 export const TURN_GUIDANCE =
   'Router: classify this task (build or fix), then adopt the matching style — build: direct production; fix: inspect first. Think deeply about architecture, edge cases, and integration points, then commit and act. Start the next reasoning block with the exact words "We need". Additional tools, including MCP tools, are discoverable only when needed through execute; inside its code call search({ query: "..." }) before using an undisclosed tool.'
+export const THIRD_REQUEST_REMINDER =
+  "<system_reminder>Tools: execute.search. Skills: cwd/.opencode/skills, ~/.config/opencode/skills.</system_reminder>"
 
 // Pro base persona — DeepSeek Harness "anchored-standard" preset persona row.
 export const PRO_PROMPT =
@@ -121,8 +123,25 @@ export default {
           if (!PRO_RESIDENT_TOOLS.has(name)) delete event.tools[name]
         }
       }
+      const requestNumber = event.messages.filter((message) => message.role === "assistant").length + 1
+      if (text === PRO_PROMPT && requestNumber === 3 && !event.messages.some(isThirdRequestReminder)) {
+        await ctx.session.synthetic({
+          sessionID: event.sessionID,
+          text: THIRD_REQUEST_REMINDER,
+          description: "OpenCode discovery reminder",
+          metadata: { source: "opencode-dsh-godmode", requestNumber },
+          resume: false,
+        })
+        event.messages.push({
+          role: "user",
+          content: [{ type: "text", text: THIRD_REQUEST_REMINDER }],
+          metadata: { dshGodmodeThirdRequestReminder: true },
+        })
+      }
       const guidanceIndex = event.messages.findLastIndex(isGuidance)
-      const userIndex = event.messages.findLastIndex((message) => message.role === "user" && !isGuidance(message))
+      const userIndex = event.messages.findLastIndex(
+        (message) => message.role === "user" && !isGuidance(message) && !isThirdRequestReminder(message),
+      )
       if (userIndex <= guidanceIndex) return
 
       const user = event.messages[userIndex]
@@ -153,4 +172,8 @@ export default {
 
 function isGuidance(message: ContextEvent["messages"][number]) {
   return message.content?.some((part) => part.type === "text" && part.text === TURN_GUIDANCE) === true
+}
+
+function isThirdRequestReminder(message: ContextEvent["messages"][number]) {
+  return message.content?.some((part) => part.type === "text" && part.text === THIRD_REQUEST_REMINDER) === true
 }

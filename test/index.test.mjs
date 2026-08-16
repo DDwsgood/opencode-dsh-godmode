@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import plugin, { BOOTSTRAP_TOOL, PRO_RESIDENT_TOOLS, PRO_PROMPT, FLASH_PROMPT, THINKING_HINT, TURN_GUIDANCE, promptForModel } from "../src/index.ts"
+import plugin, { BOOTSTRAP_TOOL, PRO_RESIDENT_TOOLS, PRO_PROMPT, FLASH_PROMPT, THINKING_HINT, THIRD_REQUEST_REMINDER, TURN_GUIDANCE, promptForModel } from "../src/index.ts"
 
 // Installs the plugin into a fake ctx and returns a `fire` that drives one event
 // through the registered "context" hook, exercising the real setup + handler.
@@ -42,6 +42,13 @@ test("FLASH_PROMPT keeps router-core WEAK_FLASH plus the verified thinking hint"
       "Before acting, decide the task type (build or fix) and adopt the matching style: build → hands-on production; fix → inspect-and-plan.\n" +
       "Before acting, briefly review what you have already done in this session and continue from where you left off; do not repeat completed steps. Do not run environment checks (echo, whoami, uname, node --version, date) or exhaustive grep/glob scans.\n" +
       THINKING_HINT,
+  )
+})
+
+test("third-request reminder preserves tool and skill discovery", () => {
+  assert.equal(
+    THIRD_REQUEST_REMINDER,
+    "<system_reminder>Tools: execute.search. Skills: cwd/.opencode/skills, ~/.config/opencode/skills.</system_reminder>",
   )
 })
 
@@ -210,6 +217,110 @@ test("persisted guidance is reused without reinjection", async () => {
   }
   const length = event.messages.length
   await fire(event)
+  assert.equal(event.messages.length, length)
+  assert.equal(syntheticCalls.length, 0)
+})
+
+test("third Pro request is derived from durable history and admits the reminder once", async () => {
+  const { fire, syntheticCalls } = rigPlugin()
+  const event = {
+    sessionID: "s-third-request",
+    agent: "build",
+    model: { id: "deepseek-v4-pro", providerID: "litellm" },
+    system: [{ type: "text", text: "host" }],
+    messages: [
+      { id: "msg-user-1", role: "user", content: [{ type: "text", text: "first" }] },
+      { id: "msg-guide-1", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-1", role: "assistant", content: [] },
+      { id: "msg-user-2", role: "user", content: [{ type: "text", text: "second" }] },
+      { id: "msg-guide-2", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-2", role: "assistant", content: [] },
+    ],
+    tools: { shell: {}, read: {}, glob: {}, edit: {}, execute: {} },
+  }
+  await fire(event)
+
+  assert.equal(event.messages.at(-1).content[0].text, THIRD_REQUEST_REMINDER)
+  assert.deepEqual(event.messages.at(-1).metadata, { dshGodmodeThirdRequestReminder: true })
+  assert.equal(syntheticCalls.length, 1)
+  assert.equal(syntheticCalls[0].text, THIRD_REQUEST_REMINDER)
+  assert.equal(syntheticCalls[0].resume, false)
+  assert.equal(syntheticCalls[0].metadata.requestNumber, 3)
+})
+
+test("Flash never receives the Pro reminder on its third request", async () => {
+  const { fire, syntheticCalls } = rigPlugin()
+  const event = {
+    sessionID: "s-flash-third-request",
+    agent: "build",
+    model: { id: "deepseek-v4-flash", providerID: "litellm" },
+    system: [{ type: "text", text: "host" }],
+    messages: [
+      { id: "msg-user", role: "user", content: [{ type: "text", text: "task" }] },
+      { id: "msg-guide", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-1", role: "assistant", content: [] },
+      { id: "msg-assistant-2", role: "assistant", content: [] },
+    ],
+    tools: { shell: {}, execute: {}, skill: {} },
+  }
+  const length = event.messages.length
+
+  await fire(event)
+
+  assert.equal(event.messages.length, length)
+  assert.equal(syntheticCalls.length, 0)
+})
+
+test("a persisted reminder is not admitted again when the third request is restored", async () => {
+  const { fire, syntheticCalls } = rigPlugin()
+  const event = {
+    sessionID: "s-third-request-restored",
+    agent: "build",
+    model: { id: "deepseek-v4-pro", providerID: "litellm" },
+    system: [{ type: "text", text: "host" }],
+    messages: [
+      { id: "msg-user", role: "user", content: [{ type: "text", text: "task" }] },
+      { id: "msg-guide", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-1", role: "assistant", content: [] },
+      { id: "msg-assistant-2", role: "assistant", content: [] },
+      { id: "msg-reminder", role: "user", content: [{ type: "text", text: THIRD_REQUEST_REMINDER }] },
+    ],
+    tools: { shell: {}, read: {}, glob: {}, edit: {}, execute: {} },
+  }
+  const length = event.messages.length
+
+  await fire(event)
+
+  assert.equal(event.messages.length, length)
+  assert.equal(syntheticCalls.length, 0)
+})
+
+test("later prompts and plugin restarts cannot retrigger the third-request reminder", async () => {
+  const { fire, syntheticCalls } = rigPlugin()
+  const event = {
+    sessionID: "s-later-request",
+    agent: "build",
+    model: { id: "deepseek-v4-pro", providerID: "litellm" },
+    system: [{ type: "text", text: "host" }],
+    messages: [
+      { id: "msg-user-1", role: "user", content: [{ type: "text", text: "first" }] },
+      { id: "msg-guide-1", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-1", role: "assistant", content: [] },
+      { id: "msg-user-2", role: "user", content: [{ type: "text", text: "second" }] },
+      { id: "msg-guide-2", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-2", role: "assistant", content: [] },
+      { id: "msg-user-3", role: "user", content: [{ type: "text", text: "third" }] },
+      { id: "msg-guide-3", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+      { id: "msg-assistant-3", role: "assistant", content: [] },
+      { id: "msg-user-4", role: "user", content: [{ type: "text", text: "fourth" }] },
+      { id: "msg-guide-4", role: "user", content: [{ type: "text", text: TURN_GUIDANCE }] },
+    ],
+    tools: { shell: {}, read: {}, glob: {}, edit: {}, execute: {} },
+  }
+  const length = event.messages.length
+
+  await fire(event)
+
   assert.equal(event.messages.length, length)
   assert.equal(syntheticCalls.length, 0)
 })
